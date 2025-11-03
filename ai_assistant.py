@@ -8,7 +8,10 @@ import os
 
 def get_gemini_client():
     """Get configured Gemini client"""
-    os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY environment variable not set.")
+    genai.configure(api_key=api_key)
     return genai.Client()
 
 def get_ai_response(user_message):
