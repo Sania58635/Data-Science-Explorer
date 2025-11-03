@@ -2,9 +2,9 @@
 
 ## Quick Start
 
-1. **Activate the virtual environment:**
+1. **Install requirements:**
    ```bash
-   source venv/bin/activate
+   pip install -r requirements.txt
    ```
 
 2. **Run the Flask server:**
