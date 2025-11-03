@@ -77,8 +77,8 @@ def ai_chat():
         return jsonify({'error': str(e)}), 500
 
 
-if __name__ == '__main__':
-    print("🚀 Starting Data Science Encyclopedia...")
-    print("📚 Navigate to http://localhost:5000")
-    app.run(host='0.0.0.0', port=5002)
+if __name__ == "__main__":
+    import os
+    port = int(os.environ.get("PORT", 5002))  # use 5002 locally, $PORT on Render
+    app.run(debug=True, host="0.0.0.0", port=port)
 
