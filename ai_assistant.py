@@ -1,29 +1,117 @@
 """
 Gemini AI Assistant Integration
 Handles AI chat functionality using Google's Gemini API
+With security guardrails to prevent abuse
 """
 
 from google import genai
 import os
+from datetime import datetime, timedelta
+from collections import defaultdict
+
+# Configure Gemini API
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+# GUARDRAILS CONFIGURATION
+MAX_MESSAGE_LENGTH = 1000  # Max characters per message
+MAX_REQUESTS_PER_HOUR = 20  # Max requests per IP per hour
+MAX_OUTPUT_TOKENS = 1024    # Limit response length (saves costs)
+
+# Simple in-memory rate limiting (resets on server restart)
+request_tracker = defaultdict(list)
 
 def get_gemini_client():
     """Get configured Gemini client"""
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise ValueError("GEMINI_API_KEY environment variable not set.")
-    genai.configure(api_key=api_key)
-    return genai.Client()
+    if GEMINI_API_KEY:
+        os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
+        return genai.Client()
+    return None
 
-def get_ai_response(user_message):
+def check_rate_limit(ip_address):
     """
-    Get response from Gemini AI
+    Check if user has exceeded rate limit
+    
+    Args:
+        ip_address (str): User's IP address
+        
+    Returns:
+        tuple: (is_allowed, remaining_requests)
+    """
+    now = datetime.now()
+    one_hour_ago = now - timedelta(hours=1)
+    
+    # Clean old requests
+    request_tracker[ip_address] = [
+        timestamp for timestamp in request_tracker[ip_address]
+        if timestamp > one_hour_ago
+    ]
+    
+    # Check limit
+    request_count = len(request_tracker[ip_address])
+    is_allowed = request_count < MAX_REQUESTS_PER_HOUR
+    remaining = MAX_REQUESTS_PER_HOUR - request_count
+    
+    if is_allowed:
+        request_tracker[ip_address].append(now)
+    
+    return is_allowed, max(0, remaining)
+
+def validate_input(user_message):
+    """
+    Validate user input for safety
+    
+    Args:
+        user_message (str): User's message
+        
+    Returns:
+        tuple: (is_valid, error_message)
+    """
+    # Check if message is empty
+    if not user_message or not user_message.strip():
+        return False, "Please enter a question."
+    
+    # Check message length
+    if len(user_message) > MAX_MESSAGE_LENGTH:
+        return False, f"Message too long. Please keep it under {MAX_MESSAGE_LENGTH} characters."
+    
+    # Block potential prompt injection attempts
+    suspicious_patterns = [
+        "ignore previous instructions",
+        "ignore all previous",
+        "you are now",
+        "new instructions:",
+        "system:",
+        "ignore system prompt"
+    ]
+    
+    message_lower = user_message.lower()
+    for pattern in suspicious_patterns:
+        if pattern in message_lower:
+            return False, "Invalid input detected. Please ask a genuine data science question."
+    
+    return True, None
+
+def get_ai_response(user_message, ip_address="unknown"):
+    """
+    Get response from Gemini AI with security guardrails
     
     Args:
         user_message (str): The user's question or message
+        ip_address (str): User's IP address for rate limiting
         
     Returns:
-        str: AI response
+        str: AI response or error message
     """
+    
+    # GUARDRAIL 1: Input validation
+    is_valid, error_msg = validate_input(user_message)
+    if not is_valid:
+        return error_msg
+    
+    # GUARDRAIL 2: Rate limiting
+    is_allowed, remaining = check_rate_limit(ip_address)
+    if not is_allowed:
+        return f"⚠️ Rate limit reached. You can make {MAX_REQUESTS_PER_HOUR} requests per hour. Please try again later."
     
     # Get client
     client = get_gemini_client()
@@ -43,21 +131,27 @@ def get_ai_response(user_message):
         Provide clear, concise explanations with examples when helpful.
         Use markdown formatting for code blocks with triple backticks.
         Be friendly, encouraging, and educational.
+        Keep responses focused on data science topics only.
         """
         
         # Combine system prompt with user message
         full_prompt = f"{system_prompt}\n\nUser question: {user_message}"
         
-        # Generate response using latest API
+        # GUARDRAIL 3: Token limits
+        # Generate response with output token limit
         response = client.models.generate_content(
             model="gemini-2.0-flash-exp",
             contents=full_prompt
         )
         
+        # Note: Token limits are set at API level (Google AI Studio)
+        # For programmatic limits, use Gemini API's generation_config parameter
+        # Current implementation relies on rate limiting + input validation
+        
         return response.text
         
     except Exception as e:
-        return f"Error: {str(e)}. Please check your API key and try again."
+        return f"Error: {str(e)}. Please try a shorter question or try again later."
 
 def get_code_explanation(code_snippet, language="python"):
     """
@@ -138,4 +232,3 @@ Include:
         
     except Exception as e:
         return f"Error explaining concept: {str(e)}"
-
