@@ -13,7 +13,7 @@
    ```
 
 3. **Open your browser:**
-   Navigate to: `http://localhost:5000`
+   Navigate to: `http://localhost:5002`
 
 ## Features
 
