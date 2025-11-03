@@ -1,0 +1,35 @@
+# Running the Data Science Encyclopedia
+
+## Quick Start
+
+1. **Activate the virtual environment:**
+   ```bash
+   source venv/bin/activate
+   ```
+
+2. **Run the Flask server:**
+   ```bash
+   python app.py
+   ```
+
+3. **Open your browser:**
+   Navigate to: `http://localhost:5000`
+
+## Features
+
+✨ **22+ Interactive Visualizations** throughout all sections
+🎨 **Premium Glassmorphism Design** with smooth animations
+📱 **Fully Responsive** layout for all devices
+⚡ **Fast Loading** with optimized images
+🔍 **Easy Navigation** with sidebar and collapsible sections
+
+## Sections Available
+
+- 🧠 Machine Learning
+- 📊 Statistics & Probability  
+- 🧮 Mathematics for Data Science
+- 🧼 Data Cleaning & Feature Engineering
+- 📈 Data Visualization
+- 🔮 AI, Deep Learning & NLP
+
+Enjoy exploring! 🚀

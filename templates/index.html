@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Science Encyclopedia 📚</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <!-- KaTeX for beautiful math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <a href="/" class="sidebar-header" 
+               role="button" 
+               aria-label="Home - Return to Data Science Encyclopedia homepage"
+               tabindex="0"
+               onkeydown="handleLogoKeyPress(event)">
+                <h1>📚 Data Science<br>Encyclopedia</h1>
+                <p class="tagline">Your comprehensive guide to mastering data science</p>
+            </a>
+            
+            <nav class="nav-menu" role="navigation" aria-label="Main navigation">
+                <button class="nav-item nav-item-home" 
+                        onclick="navigateToHome(event)" 
+                        onkeydown="if(event.key==='Enter' || event.key===' '){event.preventDefault();navigateToHome(event);}"
+                        aria-label="Home - Return to flashcards home page"
+                        tabindex="0">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Home</span>
+                </button>
+                
+                <button class="nav-item" 
+                        onclick="loadSection('machine-learning', event)"
+                        aria-label="Machine Learning"
+                        tabindex="0">
+                    <span class="nav-icon">🧠</span>
+                    <span class="nav-text">Machine Learning</span>
+                </button>
+                <button class="nav-item" 
+                        onclick="loadSection('statistics', event)"
+                        aria-label="Statistics & Probability"
+                        tabindex="0">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Statistics & Probability</span>
+                </button>
+                <button class="nav-item" 
+                        onclick="loadSection('ai-deep-learning', event)"
+                        aria-label="AI, Deep Learning & NLP"
+                        tabindex="0">
+                    <span class="nav-icon">🔮</span>
+                    <span class="nav-text">AI, Deep Learning & NLP</span>
+                </button>
+                <button class="nav-item" 
+                        onclick="loadSection('mathematics', event)"
+                        aria-label="Mathematics for Data Science"
+                        tabindex="0">
+                    <span class="nav-icon">🧮</span>
+                    <span class="nav-text">Mathematics for Data Science</span>
+                </button>
+                <button class="nav-item" 
+                        onclick="loadSection('data-cleaning', event)"
+                        aria-label="Data Cleaning & Feature Engineering"
+                        tabindex="0">
+                    <span class="nav-icon">🧼</span>
+                    <span class="nav-text">Data Cleaning & Feature Engineering</span>
+                </button>
+                <button class="nav-item" 
+                        onclick="loadSection('visualization', event)"
+                        aria-label="Data Visualization"
+                        tabindex="0">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">Data Visualization</span>
+                </button>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p>Built for learners, by Sania Panchal</p>
+                <p class="version">v1.0</p>
+            </div>
+        </aside>
+
+        <!-- AI Assistant Toggle Button -->
+        <button class="ai-toggle-btn" id="aiToggleBtn" onclick="toggleAIAssistant()" aria-label="Toggle AI Assistant">
+            <span class="ai-toggle-icon">✨</span>
+            <span class="ai-toggle-text">AI Assistant</span>
+        </button>
+
+        <!-- AI Chat Panel (Right Side Tab) -->
+        <div class="ai-chat-panel" id="aiChatPanel">
+            <div class="ai-chat-header">
+                <div class="ai-chat-title">
+                    <span class="ai-icon-header">✨</span>
+                    <h3>AI Assistant</h3>
+                </div>
+                <button class="ai-close-btn" onclick="toggleAIAssistant()" aria-label="Close AI Assistant">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="ai-chat-messages" id="aiChatMessages">
+                <div class="ai-message ai-welcome">
+                    <div class="ai-avatar">🤖</div>
+                    <div class="ai-content">
+                        <p>Hi! I'm your Data Science AI assistant powered by Gemini. Ask me anything about:</p>
+                        <ul>
+                            <li>Machine Learning concepts</li>
+                            <li>Statistical methods</li>
+                            <li>Code examples & explanations</li>
+                            <li>Best practices</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="ai-chat-input-area">
+                <textarea 
+                    id="aiChatInput" 
+                    placeholder="Ask me anything about data science..."
+                    rows="3"
+                    onkeydown="handleAIChatKeyPress(event)"
+                ></textarea>
+                <button class="ai-send-button" onclick="sendAIMessage()">
+                    <span>Send</span>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M14.5 1.5L6.5 9.5M14.5 1.5L9.5 14.5L6.5 9.5M14.5 1.5L1.5 6.5L6.5 9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+            <div class="content-header">
+                <h2 id="content-title">Welcome to Data Science Encyclopedia</h2>
+            </div>
+            
+            <div id="content-body" class="content-body">
+                <div class="welcome-section">
+                    <h2>🚀 Welcome to Your Data Science Journey</h2>
+                    <p class="intro-text">
+                        Welcome to the ultimate educational resource for data scientists! This encyclopedia organizes 
+                        everything you need to know about data science into comprehensive, easy-to-navigate sections.
+                    </p>
+                    
+                    <div class="features-grid">
+                        <div class="feature-card" onclick="loadSectionFromCard('machine-learning')" data-section="machine-learning">
+                            <div class="feature-icon">🧠</div>
+                            <h3>Machine Learning</h3>
+                            <p>Explore supervised, unsupervised, and reinforcement learning algorithms with practical examples.</p>
+                        </div>
+                        
+                        <div class="feature-card" onclick="loadSectionFromCard('statistics')" data-section="statistics">
+                            <div class="feature-icon">📊</div>
+                            <h3>Statistics & Probability</h3>
+                            <p>Master the mathematical foundations that power data science and statistical inference.</p>
+                        </div>
+                        
+                        <div class="feature-card" onclick="loadSectionFromCard('mathematics')" data-section="mathematics">
+                            <div class="feature-icon">🧮</div>
+                            <h3>Mathematics</h3>
+                            <p>Dive into linear algebra, calculus, optimization, and information theory.</p>
+                        </div>
+                        
+                        <div class="feature-card" onclick="loadSectionFromCard('data-cleaning')" data-section="data-cleaning">
+                            <div class="feature-icon">🧼</div>
+                            <h3>Data Cleaning</h3>
+                            <p>Learn essential preprocessing techniques for transforming raw data into insights.</p>
+                        </div>
+                        
+                        <div class="feature-card" onclick="loadSectionFromCard('visualization')" data-section="visualization">
+                            <div class="feature-icon">📈</div>
+                            <h3>Visualization</h3>
+                            <p>Create compelling visual stories with effective charts, dashboards, and interactive plots.</p>
+                        </div>
+                        
+                        <div class="feature-card" onclick="loadSectionFromCard('ai-deep-learning')" data-section="ai-deep-learning">
+                            <div class="feature-icon">🔮</div>
+                            <h3>AI & Deep Learning</h3>
+                            <p>Understand neural networks, transformers, NLP, computer vision, and generative AI.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="getting-started">
+                        <h3>🎯 Getting Started</h3>
+                        <ol>
+                            <li>Click any card above or use the sidebar to explore sections</li>
+                            <li>Each topic includes detailed explanations, examples, and code snippets</li>
+                            <li>Topics are collapsible for focused learning</li>
+                            <li>Use the AI Assistant on the right to ask questions and get instant help</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Toggle AI Assistant panel
+        function toggleAIAssistant() {
+            const panel = document.getElementById('aiChatPanel');
+            const toggleBtn = document.getElementById('aiToggleBtn');
+            const contentArea = document.querySelector('.content-area');
+            
+            panel.classList.toggle('open');
+            toggleBtn.classList.toggle('hidden');
+            contentArea.classList.toggle('ai-open');
+            
+            // Save state to localStorage
+            const isOpen = panel.classList.contains('open');
+            localStorage.setItem('aiAssistantOpen', isOpen);
+        }
+        
+        // Handle keyboard navigation for logo
+        function handleLogoKeyPress(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                navigateToHome();
+            }
+        }
+        
+        // Navigate to home - supports both client-side and server-side
+        function navigateToHome(event) {
+            // Prevent default if called from event
+            if (event) {
+                event.preventDefault();
+            }
+            
+            // Use history API for smooth client-side navigation
+            if (window.history && window.history.pushState) {
+                window.history.pushState({page: 'home'}, 'Home', '/');
+            }
+            
+            // Clear all active states from navigation items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Update only the page title (banner stays persistent)
+            const contentTitle = document.getElementById('content-title');
+            const contentBody = document.getElementById('content-body');
+            
+            // Get the original welcome section HTML (save it if not already saved)
+            if (!window.welcomeSectionHTML) {
+                const welcomeSection = document.querySelector('.welcome-section');
+                if (welcomeSection) {
+                    window.welcomeSectionHTML = welcomeSection.outerHTML;
+                }
+            }
+            
+            if (contentTitle && contentBody && window.welcomeSectionHTML) {
+                // Fade transition for title change
+                contentTitle.style.opacity = '0';
+                setTimeout(() => {
+                    contentTitle.innerHTML = 'Welcome to Data Science Encyclopedia';
+                    contentTitle.style.opacity = '1';
+                }, 100);
+                
+                // Restore welcome section from saved HTML
+                contentBody.innerHTML = window.welcomeSectionHTML;
+                
+                // Re-attach click handlers to feature cards
+                attachFeatureCardHandlers();
+            }
+            
+            // Smooth scroll to top
+            const contentArea = document.querySelector('.content-area');
+            if (contentArea) {
+                contentArea.scrollTop = 0;
+            }
+            
+            return false;
+        }
+        
+        // Attach handlers to feature cards
+        function attachFeatureCardHandlers() {
+            document.querySelectorAll('.feature-card').forEach(card => {
+                const sectionId = card.getAttribute('data-section');
+                if (sectionId) {
+                    card.onclick = function() {
+                        loadSectionFromCard(sectionId);
+                    };
+                }
+            });
+        }
+        
+        // Intercept logo clicks to use client-side navigation
+        // (Moved to main DOMContentLoaded handler below)
+        
+        // Render math formulas using KaTeX
+        function renderMath() {
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\(', right: '\\)', display: false},
+                        {left: '\\[', right: '\\]', display: true}
+                    ],
+                    throwOnError: false,
+                    trust: true
+                });
+            }
+        }
+
+        // Load section content dynamically from sidebar
+        function loadSection(sectionId, event) {
+            // Prevent default behavior
+            if (event) {
+                event.preventDefault();
+            }
+            
+            // Update active state in sidebar only
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Find the clicked nav item and mark as active
+            const clickedButton = event ? event.target.closest('.nav-item') : null;
+            if (clickedButton) {
+                clickedButton.classList.add('active');
+            }
+            
+            // Update URL using history API
+            if (window.history && window.history.pushState) {
+                window.history.pushState({page: sectionId}, '', `/section/${sectionId}`);
+            }
+            
+            // Fetch and render section (banner stays persistent)
+            fetchAndRenderSection(sectionId);
+        }
+        
+        // Load section from feature card click
+        function loadSectionFromCard(sectionId) {
+            // Update active state in sidebar
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Find and activate the corresponding nav item
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                const itemText = item.querySelector('.nav-text').textContent.toLowerCase();
+                const sectionMatch = {
+                    'machine-learning': 'machine learning',
+                    'statistics': 'statistics',
+                    'mathematics': 'mathematics',
+                    'data-cleaning': 'data cleaning',
+                    'visualization': 'visualization',
+                    'ai-deep-learning': 'ai, deep learning'
+                };
+                
+                if (itemText.includes(sectionMatch[sectionId])) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Fetch and render section
+            fetchAndRenderSection(sectionId);
+        }
+        
+        // Common function to fetch and render section content
+        function fetchAndRenderSection(sectionId) {
+            fetch(`/api/section/${sectionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update only the title text with smooth transition
+                    const contentTitle = document.getElementById('content-title');
+                    contentTitle.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        // Only update text content, banner style stays persistent
+                        contentTitle.innerHTML = data.title;
+                        contentTitle.style.opacity = '1';
+                        
+                        // Update main content
+                        renderSectionContent(data.content);
+                        
+                        // Render math after content loads
+                        setTimeout(renderMath, 100);
+                    }, 100);
+                    
+                    // Smooth scroll to top
+                    document.querySelector('.content-area').scrollTop = 0;
+                })
+                .catch(error => {
+                    console.error('Error loading section:', error);
+                });
+        }
+        
+        // Render section content with topics and subtopics
+        function renderSectionContent(content) {
+            const contentBody = document.getElementById('content-body');
+            
+            // Start with summary at the top
+            let html = '';
+            
+            // Add summary section if it exists
+            if (content.summary) {
+                html += content.summary;
+            }
+            
+            // Render topics
+            content.topics.forEach(topic => {
+                html += `
+                    <div class="topic-section">
+                        <div class="topic-header" onclick="toggleTopic(this)">
+                            <h3>${topic.title}</h3>
+                            <p class="topic-description">${topic.description}</p>
+                            <div class="toggle-icon"></div>
+                        </div>
+                        <div class="topic-content">
+                `;
+                
+                // Render subtopics
+                topic.subtopics.forEach(subtopic => {
+                    html += `
+                        <div class="subtopic">
+                            <div class="subtopic-header" onclick="toggleSubtopic(this)">
+                                <h4>${subtopic.name}</h4>
+                                <div class="toggle-icon"></div>
+                            </div>
+                            <div class="subtopic-content">
+                                ${subtopic.content}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            contentBody.innerHTML = html;
+        }
+        
+        // Toggle topic sections
+        function toggleTopic(element) {
+            const content = element.nextElementSibling;
+            
+            if (content.style.display === 'none' || content.style.display === '') {
+                content.style.display = 'block';
+                element.classList.add('active');
+            } else {
+                content.style.display = 'none';
+                element.classList.remove('active');
+            }
+        }
+        
+        // Toggle subtopic sections
+        function toggleSubtopic(element) {
+            const content = element.nextElementSibling;
+            
+            if (content.style.display === 'none' || content.style.display === '') {
+                content.style.display = 'block';
+                element.classList.add('active');
+            } else {
+                content.style.display = 'none';
+                element.classList.remove('active');
+            }
+        }
+        
+        // AI Chat Functions
+        function handleAIChatKeyPress(event) {
+            // Send on Cmd+Enter or Ctrl+Enter
+            if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+                event.preventDefault();
+                sendAIMessage();
+            }
+        }
+        
+        async function sendAIMessage() {
+            const input = document.getElementById('aiChatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Clear input
+            input.value = '';
+            input.style.height = 'auto';
+            
+            // Check if user is at bottom before adding message
+            const messagesContainer = document.getElementById('aiChatMessages');
+            const isAtBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 50;
+            
+            // Add user message to chat
+            addMessageToChat('user', message);
+            
+            // Add loading indicator
+            const loadingId = addMessageToChat('ai', '...');
+            
+            // Auto-scroll to bottom if user was at bottom
+            if (isAtBottom) {
+                scrollToBottom();
+            }
+            
+            try {
+                // Send to backend
+                const response = await fetch('/api/ai-chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                // Remove loading message
+                document.getElementById(loadingId).remove();
+                
+                // Add AI response
+                if (data.response) {
+                    addMessageToChat('ai', data.response);
+                } else {
+                    addMessageToChat('ai', 'Sorry, I encountered an error. Please try again.');
+                }
+                
+                // Auto-scroll to bottom if user was at bottom
+                if (isAtBottom) {
+                    scrollToBottom();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById(loadingId).remove();
+                addMessageToChat('ai', 'Sorry, I couldn\'t connect to the AI service. Please check your API key.');
+            }
+        }
+        
+        function addMessageToChat(type, content) {
+            const messagesContainer = document.getElementById('aiChatMessages');
+            const messageId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'user' ? 'ai-message user-message' : 'ai-message';
+            messageDiv.id = messageId;
+            messageDiv.setAttribute('data-message-type', type);
+            
+            if (type === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="user-avatar">👤</div>
+                    <div class="message-content">${escapeHtml(content)}</div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="ai-avatar">🤖</div>
+                    <div class="ai-content">${formatAIResponse(content)}</div>
+                `;
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            
+            return messageId;
+        }
+        
+        function scrollToBottom() {
+            const messagesContainer = document.getElementById('aiChatMessages');
+            setTimeout(() => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 100);
+        }
+        
+        function formatAIResponse(text) {
+            // Simple markdown-like formatting
+            text = escapeHtml(text);
+            
+            // Code blocks
+            text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            
+            // Inline code
+            text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Bold
+            text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            
+            // Line breaks
+            text = text.replace(/\n/g, '<br>');
+            
+            return text;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.page) {
+                if (event.state.page === 'home') {
+                    navigateToHome();
+                } else {
+                    loadSection(event.state.page);
+                }
+            }
+        });
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Save the original welcome section HTML for navigation back to home
+            const welcomeSection = document.querySelector('.welcome-section');
+            if (welcomeSection) {
+                window.welcomeSectionHTML = welcomeSection.outerHTML;
+            }
+            
+            // Intercept logo clicks to use client-side navigation
+            const logoLink = document.querySelector('.sidebar-header');
+            if (logoLink) {
+                logoLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    navigateToHome(e);
+                });
+            }
+            
+            // Attach feature card handlers
+            attachFeatureCardHandlers();
+            
+            // Render math
+            setTimeout(renderMath, 500);
+            
+            // Set initial history state
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState({page: 'home'}, 'Home', window.location.pathname);
+            }
+            
+            // Restore AI Assistant state from localStorage
+            const aiAssistantOpen = localStorage.getItem('aiAssistantOpen') === 'true';
+            if (aiAssistantOpen) {
+                const panel = document.getElementById('aiChatPanel');
+                const toggleBtn = document.getElementById('aiToggleBtn');
+                const contentArea = document.querySelector('.content-area');
+                
+                panel.classList.add('open');
+                toggleBtn.classList.add('hidden');
+                contentArea.classList.add('ai-open');
+            }
+        });
+    </script>
+</body>
+</html>
+
